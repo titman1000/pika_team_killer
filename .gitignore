@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+
+# PyInstaller build output
+build/
+dist/
+*.spec
+
+# user data generated at runtime (not part of source)
+names.txt
+winrate.csv
+teammate_winrate.csv
+
+# venv
+.venv/
+venv/
