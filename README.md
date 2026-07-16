@@ -1,6 +1,13 @@
 # pika_team_killer（隨機分組工具）
 
-一個用 PyQt5 寫的隊伍分組小工具：輸入名單、一鍵隨機分組、記錄勝負，並可依照歷史勝率自動平衡兩隊實力。
+一個隊伍分組小工具：輸入名單、一鍵隨機分組、記錄勝負，並可依照歷史勝率自動平衡兩隊實力。
+
+本專案有兩種版本：
+
+- **網頁版**（[web/](web/)，Vue 3 + TypeScript）：不用安裝任何東西，開瀏覽器就能用，部署在 GitHub Pages。資料存在瀏覽器的 localStorage，可用「匯出／匯入」搬到別的裝置或分享給隊友。詳見 [web/README.md](web/README.md)。
+- **桌面版**（[classification.py](classification.py)，PyQt5）：Windows `.exe`，資料存成本機的 CSV/txt 檔案，見下方說明。
+
+兩個版本的分組邏輯（隨機分組、輪休、依勝率加權分組）是一致的。
 
 ## 功能特色
 
@@ -78,6 +85,17 @@ pyinstaller --onefile --windowed --name TeamKiller classification.py
   2. 同時更新到一個固定的 **`latest` Release**，方便一般使用者直接下載最新版，不用進 Actions 頁面找
 
 也可以在 GitHub 的 Actions 頁面手動點擊 **Run workflow** 觸發建置（`workflow_dispatch`）。
+
+## 網頁版 + GitHub Pages 設定（只需做一次）
+
+網頁版原始碼在 [web/](web/)，由 [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) 自動建置並部署。**第一次啟用需要手動設定一次**：
+
+1. 到 repo 頁面 → **Settings** → 左側選單 **Pages**
+2. 「Build and deployment」→「Source」選 **GitHub Actions**（不是 "Deploy from a branch"）
+3. 儲存後，把這次的變更 push 到 `main`，或到 **Actions** 頁面找到 `Deploy Web App to GitHub Pages` → **Run workflow** 手動觸發一次
+4. 幾十秒後，網址會是：`https://titman1000.github.io/pika_team_killer/`（可在 Settings → Pages 頁面上方看到同樣的網址，以及部署狀態）
+
+之後每次 push 到 `main` 且變更到 `web/**`，就會自動重新建置並部署，不需要再手動操作。
 
 ## 資料檔案說明
 
