@@ -250,8 +250,60 @@ input[type="text"] {
   font-size: 15px;
 }
 
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 15px;
+}
+
+.swap-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.swap-btn {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  opacity: 0.55;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.swap-btn:hover {
+  opacity: 1;
+  background: var(--chip-bg);
+}
+
+.swap-select {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 5;
+  margin-top: 4px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-h);
+  font-size: 13px;
+}
+
 .rest-list {
   margin-top: 4px;
+}
+
+.rest-member {
+  background: var(--chip-bg);
+  border-radius: 999px;
+  padding: 4px 6px 4px 14px;
+  width: auto;
 }
 
 .hint {
@@ -304,4 +356,34 @@ td {
 .dialog-actions {
   margin-top: 16px;
   text-align: right;
+}
+
+.cloud-error {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.diff-panel {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.diff-panel h3 {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.diff-panel ul {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+.diff-panel li {
+  margin: 4px 0;
 }

@@ -12,6 +12,7 @@ export interface TeamState {
   teammateStats: Record<string, WinLoss>; // key: "name|||teammate"
   restHistory: string[][]; // 最近兩輪的休息名單
   currentGroups: [string[], string[]];
+  currentRest: string[];
   resultRecorded: boolean;
 }
 
@@ -25,6 +26,7 @@ export function defaultState(): TeamState {
     teammateStats: {},
     restHistory: [],
     currentGroups: [[], []],
+    currentRest: [],
     resultRecorded: true,
   };
 }
@@ -139,8 +141,49 @@ export function doGroup(state: TeamState, weighted: boolean): GroupResult | null
   }
 
   state.currentGroups = [group1, group2];
+  state.currentRest = rest;
   state.resultRecorded = false;
   return { group1, group2, rest };
+}
+
+type GroupSlot = "group1" | "group2" | "rest";
+
+function getSlotArray(state: TeamState, slot: GroupSlot): string[] {
+  if (slot === "group1") return state.currentGroups[0];
+  if (slot === "group2") return state.currentGroups[1];
+  return state.currentRest;
+}
+
+function locateMember(state: TeamState, name: string): { slot: GroupSlot; index: number } | null {
+  const slots: GroupSlot[] = ["group1", "group2", "rest"];
+  for (const slot of slots) {
+    const index = getSlotArray(state, slot).indexOf(name);
+    if (index >= 0) return { slot, index };
+  }
+  return null;
+}
+
+// 讓使用者手動把某人跟另一組/休息區的人互換位置，不用整個重新分組。
+export function swapMembers(state: TeamState, nameA: string, nameB: string): boolean {
+  const locA = locateMember(state, nameA);
+  const locB = locateMember(state, nameB);
+  if (!locA || !locB || locA.slot === locB.slot) return false;
+
+  const arrA = getSlotArray(state, locA.slot);
+  const arrB = getSlotArray(state, locB.slot);
+  arrA[locA.index] = nameB;
+  arrB[locB.index] = nameA;
+  return true;
+}
+
+// 回傳目前在「其他組別／休息區」的人，作為某人的可替換對象清單。
+export function swapCandidates(state: TeamState, name: string): string[] {
+  const loc = locateMember(state, name);
+  if (!loc) return [];
+  const slots: GroupSlot[] = ["group1", "group2", "rest"];
+  return slots
+    .filter((slot) => slot !== loc.slot)
+    .flatMap((slot) => getSlotArray(state, slot));
 }
 
 function recordTeammateResult(state: TeamState, group: string[], isWin: boolean): void {
