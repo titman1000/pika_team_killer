@@ -30,6 +30,7 @@ const {
 
 const nameInput = ref("");
 const weighted = ref(true);
+const avoidRepeat = ref(true);
 const grouped = ref(false);
 const swappingName = ref<string | null>(null);
 
@@ -50,7 +51,7 @@ function handleAdd() {
 }
 
 function handleGroup() {
-  const result = doGroup(weighted.value);
+  const result = doGroup(weighted.value, avoidRepeat.value);
   if (!result) return;
   grouped.value = true;
 }
@@ -241,10 +242,16 @@ async function handlePush() {
 
     <section class="card">
       <div class="controls-row">
-        <label class="checkbox-label">
-          <input v-model="weighted" type="checkbox" />
-          依勝率加權分組（強弱搭配）
-        </label>
+        <div class="checkbox-group">
+          <label class="checkbox-label">
+            <input v-model="weighted" type="checkbox" />
+            依勝率加權分組（強弱搭配）
+          </label>
+          <label class="checkbox-label">
+            <input v-model="avoidRepeat" type="checkbox" />
+            避免與上一輪隊友重複
+          </label>
+        </div>
         <div class="controls-buttons">
           <button class="btn primary" @click="handleGroup">開始分組</button>
           <button class="btn" @click="openWinrate">查看勝率</button>

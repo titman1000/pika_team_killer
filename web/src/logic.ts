@@ -101,7 +101,9 @@ export interface GroupResult {
   rest: string[];
 }
 
-export function doGroup(state: TeamState, weighted: boolean): GroupResult | null {
+// 產生一次候選分組，純粹依賴 state.restHistory（唯讀），不會修改 state。
+// 這樣才能在 doGroup() 裡重骰好幾次，只有最後選中的那次才真正寫回 state。
+function generateGrouping(state: TeamState, weighted: boolean): GroupResult | null {
   const activeNames = state.names.filter((_, i) => !state.inactiveIndices.includes(i));
   if (activeNames.length < 2) return null;
 
@@ -127,9 +129,6 @@ export function doGroup(state: TeamState, weighted: boolean): GroupResult | null
     groupPeople = people;
   }
 
-  state.restHistory.push(rest);
-  if (state.restHistory.length > 2) state.restHistory.shift();
-
   let group1: string[];
   let group2: string[];
   if (weighted) {
@@ -140,10 +139,80 @@ export function doGroup(state: TeamState, weighted: boolean): GroupResult | null
     group2 = groupPeople.slice(half);
   }
 
-  state.currentGroups = [group1, group2];
-  state.currentRest = rest;
-  state.resultRecorded = false;
   return { group1, group2, rest };
+}
+
+function pairKey(a: string, b: string): string {
+  return a < b ? `${a}|||${b}` : `${b}|||${a}`;
+}
+
+// 兩隊「同隊過」的所有兩人配對（跟哪一隊無關，只在意誰跟誰同隊）。
+function teammatePairs(groups: [string[], string[]]): Set<string> {
+  const pairs = new Set<string>();
+  for (const group of groups) {
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        pairs.add(pairKey(group[i], group[j]));
+      }
+    }
+  }
+  return pairs;
+}
+
+// Jaccard 相似度：兩組配對的重疊程度，0 = 完全不同，1 = 完全一樣。
+function pairSimilarity(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 && b.size === 0) return 0;
+  let intersection = 0;
+  for (const pair of a) {
+    if (b.has(pair)) intersection += 1;
+  }
+  const union = a.size + b.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+export const MAX_GROUP_ATTEMPTS = 30;
+export const SIMILARITY_THRESHOLD = 0.6;
+
+// 分組時盡量跟「上一輪顯示的分組」不要太像：先亂數產生一次分組，
+// 跟上一輪比對同隊配對的重疊比例，太像就重骰，最多骰 MAX_GROUP_ATTEMPTS 次，
+// 都不滿足門檻就採用重骰過程中最不像的那一次（保底：至少比純隨機好，不會無窮迴圈）。
+export function doGroup(
+  state: TeamState,
+  weighted: boolean,
+  avoidRepeat: boolean = true
+): GroupResult | null {
+  const previousPairs = teammatePairs(state.currentGroups);
+  const shouldAvoidRepeat = avoidRepeat && previousPairs.size > 0;
+
+  let best: GroupResult | null = null;
+  let bestScore = Infinity;
+  const attempts = shouldAvoidRepeat ? MAX_GROUP_ATTEMPTS : 1;
+
+  for (let i = 0; i < attempts; i++) {
+    const candidate = generateGrouping(state, weighted);
+    if (!candidate) return null;
+
+    if (!shouldAvoidRepeat) {
+      best = candidate;
+      break;
+    }
+
+    const score = pairSimilarity(previousPairs, teammatePairs([candidate.group1, candidate.group2]));
+    if (score < bestScore) {
+      bestScore = score;
+      best = candidate;
+    }
+    if (score <= SIMILARITY_THRESHOLD) break;
+  }
+
+  if (!best) return null;
+
+  state.restHistory.push(best.rest);
+  if (state.restHistory.length > 2) state.restHistory.shift();
+  state.currentGroups = [best.group1, best.group2];
+  state.currentRest = best.rest;
+  state.resultRecorded = false;
+  return best;
 }
 
 type GroupSlot = "group1" | "group2" | "rest";

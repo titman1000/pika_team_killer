@@ -39,8 +39,8 @@ export function useTeamState() {
     }
   }
 
-  function doGroup(weighted: boolean) {
-    return logic.doGroup(state as TeamState, weighted);
+  function doGroup(weighted: boolean, avoidRepeat: boolean = true) {
+    return logic.doGroup(state as TeamState, weighted, avoidRepeat);
   }
 
   function recordWinner(index: 0 | 1) {
